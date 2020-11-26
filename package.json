@@ -1,0 +1,15 @@
+{
+  "name": "FreeBicoin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/ngokhoghat/freeBitcoin.git",
+  "author": "Your Name <you@example.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "dependencies": {
+    "nodemon": "^2.0.6",
+    "puppeteer": "^5.5.0"
+  }
+}
