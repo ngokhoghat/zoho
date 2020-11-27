@@ -6,8 +6,8 @@ const URL =
 const LOG_TIME_SHEET_URL =
   "https://people.zoho.com/hrportal1524046581683/zp#timesheet/form/add-formLinkName:Time_Log";
 
-const userName = "ngocdt2@smartosc.com";
-const passWord = "a@q0CYr0#Jq1";
+const userName = "thuyvv@smartosc.com";
+const passWord = "tantrongvovong";
 
 const loginWithGoogleBtn = ".google_fed";
 const loginBtn = ".zgh-accounts .zgh-login";
@@ -23,12 +23,36 @@ const attendanceTable = "#ZPAtt_listView";
 const task = "#s2id_zp_field_412762000003736071";
 const listTask = ".select2-results";
 
+const expData = [{
+    date: 'Mon,23',
+    time: '08:20 Hrs'
+  },
+  {
+    date: 'Tue,24',
+    time: '07:49 Hrs'
+  },
+  {
+    date: 'Wed,25',
+    time: '07:23 Hrs'
+  },
+  {
+    date: 'Thu,26',
+    time: '07:41 Hrs'
+  },
+  {
+    date: 'Today,27',
+    time: '02:24 Hrs'
+  }
+]
+
 const zoho = {
   init: () => {
     zoho.getHomePage();
   },
   getHomePage: async () => {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({
+      headless: false
+    });
 
     const page = await browser.newPage();
 
@@ -63,23 +87,27 @@ const zoho = {
     await page.waitFor(attendanceTab);
     await page.$eval(attendanceTab, (elem) => elem.click());
 
-    await page.waitFor(2000);
+    await page.waitFor(5000);
     await page.waitFor(attendanceTable);
 
     const myData = await page.evaluate(() => {
       const data = [];
       const days = document.querySelectorAll("#ZPAtt_listViewEntries tr");
-      days.forEach((day) => {
+      days.forEach((day, index) => {
         const dayElem = day.querySelectorAll("td");
-        let days = {
-          date: dayElem[1].innerText,
-          time: dayElem[7].innerText,
-        };
-        data.push(days);
+        if (index > 0 && index < 6) {
+          let days = {
+            date: dayElem[1].innerText,
+            time: dayElem[7].innerText,
+          };
+          data.push(days);
+        }
       });
 
       return data;
     });
+
+    console.log(myData);
 
     await page.goto(LOG_TIME_SHEET_URL);
 
@@ -88,22 +116,26 @@ const zoho = {
     await page.type("#zp_field_412762000003736073", "8.0");
 
     await page.waitFor(1000);
-    await page.waitFor(".select2-results");
-    await page.evaluate(() => {
-      const a = document.querySelector("#zp_field_outer_412762000003736071");
-      a.click();
-      const b = document.querySelector("#s2id_zp_field_412762000003736071");
-      b.click();
-      const c = document.querySelector(".select2-choice");
-      c.click();
-      //   const listTasks = document.querySelectorAll(".select2-results li");
-      //   listTasks.forEach((item) => {
-      //     item.click();
-      //   });
+    await page.waitForSelector('#s2id_zp_field_412762000003736071 .select2-choice'); // <-- wait until it exists
+    await page.click("#s2id_zp_field_412762000003736071 .select2-choice");
+
+    await page.waitFor(3000);
+    await page.waitForSelector("#select2-drop .select2-results li");
+    const listTasks =  await page.evaluate(() => {
+      let listTask = document.querySelectorAll("#select2-drop .select2-results li");
+      return listTask;
     });
+    console.log("find select ==========================================>");
+    console.log(listTasks);
 
     // await browser.close();
   },
+  handleTime: async (data = expData) => {
+    const today = new Date();
+    console.log(today);
+    // if
+    return data;
+  }
 };
 
 module.exports = zoho;
