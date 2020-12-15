@@ -1,4 +1,5 @@
 const puppeteer = require("puppeteer");
+const moment = require("moment");
 
 const URL =
   "https://accounts.zoho.com/signin?servicename=zohopeople&signupurl=https://www.zoho.com/people/signup.html";
@@ -6,8 +7,8 @@ const URL =
 const LOG_TIME_SHEET_URL =
   "https://people.zoho.com/hrportal1524046581683/zp#timesheet/form/add-formLinkName:Time_Log";
 
-const userName = "thuyvv@smartosc.com";
-const passWord = "tantrongvovong";
+const userName = "luongng2@smartosc.com";
+const passWord = "luong@123";
 
 const loginWithGoogleBtn = ".google_fed";
 const loginBtn = ".zgh-accounts .zgh-login";
@@ -23,27 +24,28 @@ const attendanceTable = "#ZPAtt_listView";
 const task = "#s2id_zp_field_412762000003736071";
 const listTask = ".select2-results";
 
-const expData = [{
-    date: 'Mon,23',
-    time: '08:20 Hrs'
+const expData = [
+  {
+    date: "Mon,23",
+    time: "08:20 Hrs",
   },
   {
-    date: 'Tue,24',
-    time: '07:49 Hrs'
+    date: "Tue,24",
+    time: "07:49 Hrs",
   },
   {
-    date: 'Wed,25',
-    time: '07:23 Hrs'
+    date: "Wed,25",
+    time: "07:23 Hrs",
   },
   {
-    date: 'Thu,26',
-    time: '07:41 Hrs'
+    date: "Thu,26",
+    time: "07:41 Hrs",
   },
   {
-    date: 'Today,27',
-    time: '02:24 Hrs'
-  }
-]
+    date: "Today,27",
+    time: "02:24 Hrs",
+  },
+];
 
 const zoho = {
   init: () => {
@@ -51,7 +53,7 @@ const zoho = {
   },
   getHomePage: async () => {
     const browser = await puppeteer.launch({
-      headless: false
+      headless: false,
     });
 
     const page = await browser.newPage();
@@ -107,26 +109,50 @@ const zoho = {
       return data;
     });
 
-    console.log(myData);
+    (async function () {
+      for (let i = 0; i < myData.length; i++) {
+        let myNewData = zoho.cookData(myData[i]);
+        console.log(myNewData);
 
-    await page.goto(LOG_TIME_SHEET_URL);
+        await page.goto(LOG_TIME_SHEET_URL);
 
-    await page.waitFor(5000);
-    await page.waitFor("#zp_field_412762000003736073");
-    await page.type("#zp_field_412762000003736073", "8.0");
+        await page.waitForSelector("#zp_field_412762000003736073");
+        await page.evaluate(
+          () =>
+            (document.getElementById("zp_field_412762000003736073").value =
+              myNewData.time)
+        );
 
-    await page.waitFor(1000);
-    await page.waitForSelector('#s2id_zp_field_412762000003736071 .select2-choice'); // <-- wait until it exists
-    await page.click("#s2id_zp_field_412762000003736071 .select2-choice");
+        await page.waitForSelector(
+          "#s2id_zp_field_412762000003736071 .select2-choice"
+        ); // <-- wait until it exists
+        await page.click("#s2id_zp_field_412762000003736071 .select2-choice");
 
-    await page.waitFor(3000);
-    await page.waitForSelector("#select2-drop .select2-results li");
-    const listTasks =  await page.evaluate(() => {
-      let listTask = document.querySelectorAll("#select2-drop .select2-results li");
-      return listTask;
-    });
-    console.log("find select ==========================================>");
-    console.log(listTasks);
+        await page.waitForSelector("#select2-drop .select2-results li");
+        await page.type("#select2-drop input", "Coding");
+
+        await page.waitFor(3000);
+        await page.keyboard.press("Enter");
+
+        await page.waitForSelector(
+          "#s2id_zp_field_412762000003736075 .select2-choice"
+        ); // <-- wait until it exists
+        await page.click("#s2id_zp_field_412762000003736075 .select2-choice");
+
+        await page.waitForSelector("#select2-drop .select2-results li");
+        await page.type("#select2-drop input", "PB_MQ_PA");
+
+        await page.waitFor(3000);
+        await page.keyboard.press("Enter");
+
+        await page.waitForSelector("#zp_field_outer_412762000003736077 input"); // <-- wait until it exists
+        await page.evaluate(
+          () =>
+            (document.getElementById("zp_field_412762000003736077").value =
+              myNewData.date)
+        );
+      }
+    })();
 
     // await browser.close();
   },
@@ -135,7 +161,25 @@ const zoho = {
     console.log(today);
     // if
     return data;
-  }
+  },
+  cookData: (data) => {
+    let day = data.date.split(",")[1];
+    let timeSheet = data.time.split(" ");
+
+    let hoursMinutes = timeSheet.split(/[.:]/);
+    let hours = parseInt(hoursMinutes[0], 10);
+    let minutes = hoursMinutes[1] ? parseFloat(hoursMinutes[1]) : 0;
+    return {
+      time: parseFloat(
+        `${hours}.${minutes >= 10 ? Math.round(minutes / 10) : 0}`
+      ),
+      date: moment(
+        `${new Date().getFullYear().toString()}-${(
+          new Date().getMonth() + 1
+        ).toString()}-14`
+      ).format("DD-MMM-YYYY"),
+    };
+  },
 };
 
 module.exports = zoho;
