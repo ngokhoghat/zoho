@@ -7,8 +7,14 @@ const URL =
 const LOG_TIME_SHEET_URL =
   "https://people.zoho.com/hrportal1524046581683/zp#timesheet/form/add-formLinkName:Time_Log";
 
-const userName = "luongng2@smartosc.com";
-const passWord = "luong@123";
+const userName = "ngocdt2@smartosc.com";
+const passWord = "a@q0CYr0#Jq1";
+
+// const userName = "hiepnc@smartosc.com";
+// const passWord = "TWI92CcJ%^";
+
+// const userName = "hiepnc@smartosc.com";
+// const passWord = "TWI92CcJ%^";
 
 const loginWithGoogleBtn = ".google_fed";
 const loginBtn = ".zgh-accounts .zgh-login";
@@ -49,7 +55,11 @@ const expData = [
 
 const zoho = {
   init: () => {
-    zoho.getHomePage();
+    try {
+      zoho.getHomePage();
+    } catch (error) {
+      zoho.init();
+    }
   },
   getHomePage: async () => {
     const browser = await puppeteer.launch({
@@ -63,98 +73,110 @@ const zoho = {
       height: 969,
       deviceScaleFactor: 1,
     });
-    await page.goto(URL);
 
-    // await page.waitFor(loginBtn);
-    // await page.$eval(loginBtn, (elem) => elem.click());
+    try {
+      await page.goto(URL);
 
-    await page.waitFor(loginWithGoogleBtn);
-    await page.$eval(loginWithGoogleBtn, (elem) => elem.click());
+      // await page.waitFor(loginBtn);
+      // await page.$eval(loginBtn, (elem) => elem.click());
 
-    await page.waitFor(emailInput);
-    await page.type(emailInput, userName);
+      await page.waitFor(loginWithGoogleBtn);
+      await page.$eval(loginWithGoogleBtn, (elem) => elem.click());
 
-    await page.waitFor(1000);
-    await page.waitFor(nextBtn);
-    await page.$eval(nextBtn, (elem) => elem.click());
+      await page.waitFor(emailInput);
+      await page.type(emailInput, userName);
 
-    await page.waitFor(2000);
-    await page.waitFor(passwordInput);
-    await page.type(passwordInput, passWord);
+      await page.waitFor(1000);
+      await page.waitFor(nextBtn);
+      await page.$eval(nextBtn, (elem) => elem.click());
 
-    await page.waitFor(1000);
-    await page.waitFor(nextBtn);
-    await page.$eval(nextBtn, (elem) => elem.click());
+      await page.waitFor(2000);
+      await page.waitFor(passwordInput);
+      await page.type(passwordInput, passWord);
 
-    await page.waitFor(attendanceTab);
-    await page.$eval(attendanceTab, (elem) => elem.click());
+      await page.waitFor(1000);
+      await page.waitFor(nextBtn);
+      await page.$eval(nextBtn, (elem) => elem.click());
 
-    await page.waitFor(5000);
-    await page.waitFor(attendanceTable);
+      await page.waitFor(attendanceTab);
+      await page.$eval(attendanceTab, (elem) => elem.click());
 
-    const myData = await page.evaluate(() => {
-      const data = [];
-      const days = document.querySelectorAll("#ZPAtt_listViewEntries tr");
-      days.forEach((day, index) => {
-        const dayElem = day.querySelectorAll("td");
-        if (index > 0 && index < 6) {
-          let days = {
-            date: dayElem[1].innerText,
-            time: dayElem[7].innerText,
-          };
-          data.push(days);
-        }
+      await page.waitFor(5000);
+      await page.waitFor(attendanceTable);
+
+      const myData = await page.evaluate(() => {
+        const data = [];
+        const days = document.querySelectorAll("#ZPAtt_listViewEntries tr");
+        days.forEach((day, index) => {
+          const dayElem = day.querySelectorAll("td");
+          if (index > 0 && index < 6) {
+            let days = {
+              date: dayElem[1].innerText,
+              time: dayElem[7].innerText,
+            };
+            data.push(days);
+          }
+        });
+
+        return data;
       });
 
-      return data;
-    });
+      (async function () {
+        for (let i = 0; i < myData.length; i++) {
+          const myNewData = zoho.cookData(myData[i]);
+          const { time, date } = myNewData;
+          console.log(myNewData);
+          await page.goto(LOG_TIME_SHEET_URL);
 
-    (async function () {
-      for (let i = 0; i < myData.length; i++) {
-        let myNewData = zoho.cookData(myData[i]);
-        console.log(myNewData);
+          await page.waitForSelector("#zp_field_412762000003736073");
+          await page.evaluate(
+            ({ time, date }) => {
+              document.getElementById(
+                "zp_field_412762000003736073"
+              ).value = time;
+            },
+            { time, date }
+          );
 
-        await page.goto(LOG_TIME_SHEET_URL);
+          await page.waitForSelector(
+            "#s2id_zp_field_412762000003736071 .select2-choice"
+          ); // <-- wait until it exists
+          await page.click("#s2id_zp_field_412762000003736071 .select2-choice");
 
-        await page.waitForSelector("#zp_field_412762000003736073");
-        await page.evaluate(
-          () =>
-            (document.getElementById("zp_field_412762000003736073").value =
-              myNewData.time)
-        );
+          await page.waitForSelector("#select2-drop .select2-results li");
+          await page.type("#select2-drop input", "Coding");
 
-        await page.waitForSelector(
-          "#s2id_zp_field_412762000003736071 .select2-choice"
-        ); // <-- wait until it exists
-        await page.click("#s2id_zp_field_412762000003736071 .select2-choice");
+          await page.waitFor(3000);
+          await page.keyboard.press("Enter");
 
-        await page.waitForSelector("#select2-drop .select2-results li");
-        await page.type("#select2-drop input", "Coding");
+          await page.waitForSelector(
+            "#s2id_zp_field_412762000003736075 .select2-choice"
+          ); // <-- wait until it exists
+          await page.click("#s2id_zp_field_412762000003736075 .select2-choice");
 
-        await page.waitFor(3000);
-        await page.keyboard.press("Enter");
+          await page.waitForSelector("#select2-drop .select2-results li");
+          await page.type("#select2-drop input", "PB_MQ_PA");
 
-        await page.waitForSelector(
-          "#s2id_zp_field_412762000003736075 .select2-choice"
-        ); // <-- wait until it exists
-        await page.click("#s2id_zp_field_412762000003736075 .select2-choice");
+          await page.waitFor(3000);
+          await page.keyboard.press("Enter");
 
-        await page.waitForSelector("#select2-drop .select2-results li");
-        await page.type("#select2-drop input", "PB_MQ_PA");
-
-        await page.waitFor(3000);
-        await page.keyboard.press("Enter");
-
-        await page.waitForSelector("#zp_field_outer_412762000003736077 input"); // <-- wait until it exists
-        await page.evaluate(
-          () =>
-            (document.getElementById("zp_field_412762000003736077").value =
-              myNewData.date)
-        );
-      }
-    })();
-
-    // await browser.close();
+          await page.waitForSelector(
+            "#zp_field_outer_412762000003736077 input"
+          ); // <-- wait until it exists
+          await page.evaluate(
+            ({ time, date }) => {
+              document.getElementById(
+                "zp_field_412762000003736077"
+              ).value = date;
+            },
+            { time, date }
+          );
+        }
+        await browser.close();
+      })();
+    } catch (error) {
+      await browser.close();
+    }
   },
   handleTime: async (data = expData) => {
     const today = new Date();
@@ -164,8 +186,7 @@ const zoho = {
   },
   cookData: (data) => {
     let day = data.date.split(",")[1];
-    let timeSheet = data.time.split(" ");
-
+    let timeSheet = data.time.split(" ")[0];
     let hoursMinutes = timeSheet.split(/[.:]/);
     let hours = parseInt(hoursMinutes[0], 10);
     let minutes = hoursMinutes[1] ? parseFloat(hoursMinutes[1]) : 0;
@@ -176,7 +197,7 @@ const zoho = {
       date: moment(
         `${new Date().getFullYear().toString()}-${(
           new Date().getMonth() + 1
-        ).toString()}-14`
+        ).toString()}-${day}`
       ).format("DD-MMM-YYYY"),
     };
   },
