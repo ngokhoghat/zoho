@@ -10,6 +10,9 @@ const LOG_TIME_SHEET_URL =
 const userName = "ngocdt2@smartosc.com";
 const passWord = "a@q0CYr0#Jq1";
 
+// const userName = "thuyvv@smartosc.com";
+// const passWord = "tantrongvovong";
+
 // const userName = "hiepnc@smartosc.com";
 // const passWord = "TWI92CcJ%^";
 
@@ -30,8 +33,7 @@ const attendanceTable = "#ZPAtt_listView";
 const task = "#s2id_zp_field_412762000003736071";
 const listTask = ".select2-results";
 
-const expData = [
-  {
+const expData = [{
     date: "Mon,23",
     time: "08:20 Hrs",
   },
@@ -58,7 +60,10 @@ const zoho = {
     try {
       zoho.getHomePage();
     } catch (error) {
-      zoho.init();
+      console.log("Reconnect....");
+      setTimeout(() => {
+        zoho.init();
+      }, 3000);
     }
   },
   getHomePage: async () => {
@@ -124,18 +129,26 @@ const zoho = {
       (async function () {
         for (let i = 0; i < myData.length; i++) {
           const myNewData = zoho.cookData(myData[i]);
-          const { time, date } = myNewData;
+          const {
+            time,
+            date
+          } = myNewData;
           console.log(myNewData);
           await page.goto(LOG_TIME_SHEET_URL);
 
           await page.waitForSelector("#zp_field_412762000003736073");
           await page.evaluate(
-            ({ time, date }) => {
+            ({
+              time,
+              date
+            }) => {
               document.getElementById(
                 "zp_field_412762000003736073"
               ).value = time;
-            },
-            { time, date }
+            }, {
+              time,
+              date
+            }
           );
 
           await page.waitForSelector(
@@ -164,12 +177,17 @@ const zoho = {
             "#zp_field_outer_412762000003736077 input"
           ); // <-- wait until it exists
           await page.evaluate(
-            ({ time, date }) => {
+            ({
+              time,
+              date
+            }) => {
               document.getElementById(
                 "zp_field_412762000003736077"
               ).value = date;
-            },
-            { time, date }
+            }, {
+              time,
+              date
+            }
           );
         }
         await browser.close();
